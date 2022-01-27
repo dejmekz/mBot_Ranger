@@ -7,7 +7,6 @@ from time import ctime,sleep
 import glob,struct
 from multiprocessing import Process,Manager,Array
 import threading
-import hid
 
 class mSerial():
     ser = None
@@ -154,13 +153,17 @@ class mBot():
         self.__writePackage(bytearray([0xff,0x55,0x9,0x0,0x2,0x8,port,slot,index,red,green,blue]))
 
     def doRGBLedOnBoard(self,index,red,green,blue):
-        self.doRGBLed(0x7,0x2,index,red,green,blue)
+        self.doRGBLed(0x0,0x1,index,red,green,blue)
+
+    def doMotor2(self,port,speed):
+        self.__writePackage(bytearray([0xff,0x55,0x06,0x60,0x02,0x0a,0x09]+self.short2bytes(speed)))
+        self.__writePackage(bytearray([0xff,0x55,0x06,0x60,0x02,0x0a,0x0a]+self.short2bytes(speed)))
 
     def doMotor(self,port,speed):
         self.__writePackage(bytearray([0xff,0x55,0x6,0x0,0x2,0xa,port]+self.short2bytes(speed)))
 
     def doMove(self,leftSpeed,rightSpeed):
-        self.__writePackage(bytearray([0xff,0x55,0x7,0x0,0x2,0x5]+self.short2bytes(-leftSpeed)+self.short2bytes(rightSpeed)))
+        self.__writePackage(bytearray([0xff,0x55,0x7,0x0,0x2,0x5])+self.short2bytes(-leftSpeed)+self.short2bytes(rightSpeed))
         
     def doServo(self,port,slot,angle):
         self.__writePackage(bytearray([0xff,0x55,0x6,0x0,0x2,0xb,port,slot,angle]))
@@ -258,5 +261,6 @@ class mBot():
         return [ord(val[0]),ord(val[1]),ord(val[2]),ord(val[3])]
 
     def short2bytes(self,sval):
-        val = struct.pack("h",sval)
-        return [ord(val[0]),ord(val[1])]
+        return sval.to_bytes(2, byteorder='little', signed=True)
+        #val = struct.pack("h",sval)
+        #return [val[0],val[1]]
